@@ -24,17 +24,31 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />, 
-        }}
-      />
-      <Tabs.Screen
         name="bmi-calculator"
         options={{
           title: 'BMI',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="heart.fill" color={color} />, 
+        }}
+      />
+      <Tabs.Screen
+        name="bmi-history"
+        options={{
+          title: 'History',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="clock.fill" color={color} />, 
+        }}
+      />
+      <Tabs.Screen
+        name="bmi-info"
+        options={{
+          title: 'Info',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="info.circle.fill" color={color} />, 
+        }}
+      />
+      <Tabs.Screen
+        name="bmi-settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />, 
         }}
       />
     </Tabs>

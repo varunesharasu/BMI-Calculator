@@ -10,6 +10,7 @@ import Animated, {
   ZoomIn,
 } from 'react-native-reanimated';
 import { calculateBMI } from '../utils/calculateBMI';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -35,12 +36,21 @@ export default function BMICalculatorScreen() {
     buttonScale.value = withSpring(1);
   };
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     const w = parseFloat(weight);
     const h = parseFloat(height);
     if (!w || !h) return;
     const result = calculateBMI(w, h);
     setBmi(result);
+
+    // Save to history
+    const entry = { bmi: result, weight: w, height: h, date: new Date().toLocaleString() };
+    try {
+      const prev = await AsyncStorage.getItem('bmiHistory');
+      const arr = prev ? JSON.parse(prev) : [];
+      arr.unshift(entry);
+      await AsyncStorage.setItem('bmiHistory', JSON.stringify(arr.slice(0, 20)));
+    } catch {}
 
     // Animate result
     resultOpacity.value = withTiming(1, { duration: 400 });
@@ -150,41 +160,49 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 20,
-    padding: 24,
+    padding: 18,
     marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
+    width: '95%',
+    maxWidth: 400,
+    alignSelf: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    width: '100%',
   },
   label: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#333',
     width: 60,
+    minWidth: 50,
   },
   input: {
     flex: 1,
     borderWidth: 2,
     borderColor: '#e0e0e0',
     borderRadius: 12,
-    padding: 14,
-    fontSize: 18,
+    padding: 12,
+    fontSize: 17,
     backgroundColor: '#fafafa',
     color: '#222',
     marginHorizontal: 8,
+    minWidth: 0,
   },
   unit: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
     color: '#666',
     width: 30,
+    minWidth: 25,
+    textAlign: 'right',
   },
   button: {
     borderRadius: 16,
@@ -210,13 +228,16 @@ const styles = StyleSheet.create({
     marginTop: 24,
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 6,
+    width: '90%',
+    maxWidth: 350,
+    alignSelf: 'center',
   },
   resultLabel: {
     fontSize: 14,
