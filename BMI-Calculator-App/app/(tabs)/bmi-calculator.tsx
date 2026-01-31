@@ -18,7 +18,7 @@ export default function BMICalculatorScreen() {
     if (!w || !h) return;
     const result = calculateBMI(w, h);
     setBmi(result);
-    router.push({ pathname: 'bmi-result', params: { bmi: result } });
+    router.push({ pathname: 'bmi-result', params: { bmi: result, height: h } });
   };
 
   return (
