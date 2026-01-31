@@ -17,6 +17,7 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="bmi-result" options={{ title: 'BMI Result' }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
