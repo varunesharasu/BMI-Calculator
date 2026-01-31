@@ -98,7 +98,7 @@ export default function BMIResultScreen() {
   }));
 
   return (
-    <LinearGradient colors={['#667eea', '#764ba2']} style={styles.gradient}>
+    <LinearGradient colors={['#4facfe', '#00f2fe']} style={styles.gradient}>
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.container}>
           <Animated.View entering={FadeInUp.duration(600).delay(100)}>

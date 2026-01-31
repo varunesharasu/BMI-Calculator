@@ -52,7 +52,7 @@ export default function BMIInfoScreen() {
   }));
 
   return (
-    <LinearGradient colors={['#11998e', '#38ef7d']} style={styles.gradient}>
+    <LinearGradient colors={['#4facfe', '#00f2fe']} style={styles.gradient}>
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.container}>
           <Animated.View entering={FadeInUp.duration(600).delay(100)}>
