@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, Pressable, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, Pressable, View, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -7,9 +7,15 @@ import Animated, {
   FadeInUp,
   FadeInDown,
   ZoomIn,
+  BounceIn,
+  SlideInRight,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withRepeat,
+  withTiming,
+  withSequence,
+  Easing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -23,7 +29,6 @@ function getBMICategory(bmi: number): { category: string; color: string; emoji: 
 }
 
 function getHealthyWeightRange(height: number): string {
-  // height in cm
   const h = height / 100;
   const min = (18.5 * h * h).toFixed(1);
   const max = (24.9 * h * h).toFixed(1);
@@ -47,9 +52,33 @@ export default function BMIResultScreen() {
   const advice = getBMIAdvice(bmiValue);
 
   const buttonScale = useSharedValue(1);
+  const pulseScale = useSharedValue(1);
+  const emojiRotation = useSharedValue(0);
+
+  useEffect(() => {
+    // Pulse animation for the result circle
+    pulseScale.value = withRepeat(
+      withSequence(
+        withTiming(1.05, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+    // Emoji bounce
+    emojiRotation.value = withRepeat(
+      withSequence(
+        withTiming(-10, { duration: 300 }),
+        withTiming(10, { duration: 300 }),
+        withTiming(0, { duration: 300 })
+      ),
+      3,
+      false
+    );
+  }, []);
 
   const handlePressIn = () => {
-    buttonScale.value = withSpring(0.95);
+    buttonScale.value = withSpring(0.92);
   };
 
   const handlePressOut = () => {
@@ -60,50 +89,64 @@ export default function BMIResultScreen() {
     transform: [{ scale: buttonScale.value }],
   }));
 
+  const animatedPulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
+
+  const animatedEmojiStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${emojiRotation.value}deg` }],
+  }));
+
   return (
     <LinearGradient colors={['#667eea', '#764ba2']} style={styles.gradient}>
-      <ThemedView style={styles.container}>
-        <Animated.View entering={FadeInUp.duration(500).delay(100)}>
-          <ThemedText type="title" style={styles.title}>📊 Your BMI Result</ThemedText>
-        </Animated.View>
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <ThemedView style={styles.container}>
+          <Animated.View entering={FadeInUp.duration(600).delay(100)}>
+            <ThemedText type="title" style={styles.title}>📊 Your BMI Result</ThemedText>
+          </Animated.View>
 
-        <Animated.View entering={ZoomIn.duration(600).delay(200)} style={styles.resultCircle}>
-          <ThemedText style={styles.emoji}>{emoji}</ThemedText>
-          <ThemedText type="title" style={styles.bmiValue}>{bmiValue || '--'}</ThemedText>
-          <ThemedText style={[styles.categoryText, { color }]}>{category}</ThemedText>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.duration(500).delay(400)} style={styles.infoCard}>
-          {healthyRange && (
-            <View style={styles.infoRow}>
-              <ThemedText style={styles.infoLabel}>🎯 Healthy Range</ThemedText>
-              <ThemedText style={styles.infoValue}>{healthyRange}</ThemedText>
+          <Animated.View entering={BounceIn.duration(800).delay(200)} style={[styles.resultCircle, animatedPulseStyle]}>
+            <Animated.View style={animatedEmojiStyle}>
+              <ThemedText style={styles.emoji}>{emoji}</ThemedText>
+            </Animated.View>
+            <ThemedText type="title" style={styles.bmiValue}>{bmiValue || '--'}</ThemedText>
+            <View style={[styles.categoryBadge, { backgroundColor: color }]}>
+              <ThemedText style={styles.categoryText}>{category}</ThemedText>
             </View>
-          )}
-          <View style={styles.divider} />
-          <ThemedText style={styles.advice}>{advice}</ThemedText>
-        </Animated.View>
+          </Animated.View>
 
-        <Animated.View entering={FadeInDown.duration(500).delay(600)}>
-          <AnimatedPressable
-            style={[styles.button, animatedButtonStyle]}
-            onPress={() => router.back()}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-          >
-            <LinearGradient
-              colors={['#4facfe', '#00f2fe']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.buttonGradient}
+          <Animated.View entering={SlideInRight.duration(500).delay(500)} style={styles.infoCard}>
+            {healthyRange && (
+              <View style={styles.infoRow}>
+                <ThemedText style={styles.infoLabel}>🎯 Healthy Range</ThemedText>
+                <ThemedText style={styles.infoValue}>{healthyRange}</ThemedText>
+              </View>
+            )}
+            <View style={styles.divider} />
+            <ThemedText style={styles.advice}>{advice}</ThemedText>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.duration(500).delay(700)}>
+            <AnimatedPressable
+              style={[styles.button, animatedButtonStyle]}
+              onPress={() => router.back()}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
             >
-              <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-                ← Calculate Again
-              </ThemedText>
-            </LinearGradient>
-          </AnimatedPressable>
-        </Animated.View>
-      </ThemedView>
+              <LinearGradient
+                colors={['#4facfe', '#00f2fe']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}
+              >
+                <ThemedText type="defaultSemiBold" style={styles.buttonText}>
+                  ← Calculate Again
+                </ThemedText>
+              </LinearGradient>
+            </AnimatedPressable>
+          </Animated.View>
+        </ThemedView>
+      </ScrollView>
     </LinearGradient>
   );
 }
@@ -112,110 +155,127 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    paddingHorizontal: 20,
     backgroundColor: 'transparent',
   },
   title: {
-    marginBottom: 24,
+    marginBottom: 28,
     textAlign: 'center',
     color: '#fff',
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 'bold',
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 4,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 6,
   },
   resultCircle: {
-    width: '80%',
-    maxWidth: 220,
-    aspectRatio: 1,
-    borderRadius: 110,
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 28,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 10,
-    alignSelf: 'center',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 4,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
   emoji: {
-    fontSize: 32,
-    marginBottom: 4,
+    fontSize: 36,
+    marginBottom: 6,
   },
   bmiValue: {
-    fontSize: 48,
+    fontSize: 44,
     fontWeight: 'bold',
     color: '#333',
+    lineHeight: 50,
+  },
+  categoryBadge: {
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   categoryText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
-    marginTop: 4,
+    color: '#fff',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   infoCard: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    width: '90%',
-    maxWidth: 350,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 28,
+    width: '100%',
+    maxWidth: 340,
     alignSelf: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowRadius: 12,
+    elevation: 8,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   infoLabel: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: '#555',
+    fontWeight: '500',
   },
   infoValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: '#333',
   },
   divider: {
     height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 12,
+    backgroundColor: '#eee',
+    marginVertical: 14,
   },
   advice: {
     fontSize: 15,
-    color: '#555',
+    color: '#444',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 24,
+    fontWeight: '500',
   },
   button: {
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#4facfe',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
   },
   buttonGradient: {
-    paddingVertical: 14,
-    paddingHorizontal: 40,
+    paddingVertical: 16,
+    paddingHorizontal: 48,
     alignItems: 'center',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });

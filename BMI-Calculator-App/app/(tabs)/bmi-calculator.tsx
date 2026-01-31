@@ -10,7 +10,6 @@ import Animated, {
   ZoomIn,
 } from 'react-native-reanimated';
 import { calculateBMI } from '../utils/calculateBMI';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -36,21 +35,12 @@ export default function BMICalculatorScreen() {
     buttonScale.value = withSpring(1);
   };
 
-  const handleCalculate = async () => {
+  const handleCalculate = () => {
     const w = parseFloat(weight);
     const h = parseFloat(height);
     if (!w || !h) return;
     const result = calculateBMI(w, h);
     setBmi(result);
-
-    // Save to history
-    const entry = { bmi: result, weight: w, height: h, date: new Date().toLocaleString() };
-    try {
-      const prev = await AsyncStorage.getItem('bmiHistory');
-      const arr = prev ? JSON.parse(prev) : [];
-      arr.unshift(entry);
-      await AsyncStorage.setItem('bmiHistory', JSON.stringify(arr.slice(0, 20)));
-    } catch {}
 
     // Animate result
     resultOpacity.value = withTiming(1, { duration: 400 });

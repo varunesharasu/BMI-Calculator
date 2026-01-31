@@ -31,13 +31,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="bmi-history"
-        options={{
-          title: 'History',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="clock.fill" color={color} />, 
-        }}
-      />
-      <Tabs.Screen
         name="bmi-info"
         options={{
           title: 'Info',
